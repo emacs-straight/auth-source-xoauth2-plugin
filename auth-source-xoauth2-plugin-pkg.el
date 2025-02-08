@@ -1,0 +1,2 @@
+;; Generated package description from auth-source-xoauth2-plugin.el  -*- no-byte-compile: t -*-
+(define-package "auth-source-xoauth2-plugin" "0.1.0.20250201.220645" "authentication source plugin for xoauth2" '((emacs "28.1") (oauth2 "0.17")) :commit "991ef1751a31fb0157ccc16245903bf1743615ed" :url "https://elpa.gnu.org/packages/auth-source-xoauth2-plugin.html" :authors '(("Xiyue Deng" . "manphiz@gmail.com")) :maintainer '("Xiyue Deng" . "manphiz@gmail.com"))
