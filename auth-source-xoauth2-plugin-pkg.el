@@ -1,2 +1,2 @@
-;; Generated package description from auth-source-xoauth2-plugin.el  -*- no-byte-compile: t -*-
-(define-package "auth-source-xoauth2-plugin" "0.1.1.0.20250211.151603" "authentication source plugin for xoauth2" '((emacs "28.1") (oauth2 "0.17")) :commit "21b361839286b174698bae4258ec893dc5f5c27d" :url "https://elpa.gnu.org/packages/auth-source-xoauth2-plugin.html" :authors '(("Xiyue Deng" . "manphiz@gmail.com")) :maintainer '("Xiyue Deng" . "manphiz@gmail.com"))
+;; Generated package description from auth-source-xoauth2-plugin.el  -*- mode: lisp-data; no-byte-compile: t -*-
+(define-package "auth-source-xoauth2-plugin" "0.2.0.20250516.15306" "authentication source plugin for xoauth2" '((emacs "28.1") (oauth2 "0.17")) :commit "df1125e031ee87163d14d44767c82af290e2710a" :url "https://elpa.gnu.org/packages/auth-source-xoauth2-plugin.html" :authors '(("Xiyue Deng" . "manphiz@gmail.com")) :maintainer '("Xiyue Deng" . "manphiz@gmail.com"))
