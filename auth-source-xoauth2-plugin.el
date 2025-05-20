@@ -3,7 +3,7 @@
 ;; Copyright (C) 2024-2025  Free Software Foundation, Inc.
 
 ;; Author: Xiyue Deng <manphiz@gmail.com>
-;; Version: 0.2
+;; Version: 0.2.1
 ;; Package-Requires: ((emacs "28.1") (oauth2 "0.17"))
 
 ;; This file is not part of GNU Emacs.
@@ -105,7 +105,7 @@ expected that `token_url', `client_id', `client_secret', and
     ;; credentials which will never happen.  Putting 'xoauth2 as the last entry
     ;; in smtpmail-auth-supported so that it is tried last.  See also
     ;; https://debbugs.gnu.org/78366.
-    (add-to-list smtpmail-auth-supported 'xoauth2 t)
+    (add-to-list 'smtpmail-auth-supported 'xoauth2 t)
     (setq auth-source-xoauth2-plugin--enabled-xoauth2-by-us t))
 
   (advice-add #'auth-source-search-backends :around
