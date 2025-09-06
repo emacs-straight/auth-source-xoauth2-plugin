@@ -1,10 +1,11 @@
-;;; auth-source-xoauth2-plugin.el --- authentication source plugin for xoauth2 -*- lexical-binding: t -*-
+;;; auth-source-xoauth2-plugin.el --- Authentication source plugin for xoauth2 -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2024-2025  Free Software Foundation, Inc.
 
 ;; Author: Xiyue Deng <manphiz@gmail.com>
-;; Version: 0.2.1
-;; Package-Requires: ((emacs "28.1") (oauth2 "0.17"))
+;; Homepage: https://gitlab.com/manphiz/auth-source-xoauth2-plugin
+;; Version: 0.3
+;; Package-Requires: ((emacs "28.1") (oauth2 "0.18"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -38,7 +39,36 @@
 (require 'cl-lib)
 (require 'map)
 (require 'oauth2)
+(require 'org)
 (require 'smtpmail)
+
+(defvar auth-source-xoauth2-plugin-predefined-issuers
+  '(thunderbird
+    (google
+     ( :client-id "406964657835-aq8lmia8j95dhl1a2bvharmfk3t1hgqj.apps.googleusercontent.com"
+       :client-secret "kSmqreRr0qwBWJgbf5Y-PjSU"
+       :auth-url "https://accounts.google.com/o/oauth2/auth"
+       :token-url "https://www.googleapis.com/oauth2/v3/token"
+       :redirect-uri "http://localhost/"
+       :scope "https://mail.google.com/"
+       :use-pkce "true" )
+     microsoft
+     ( :client-id "9e5f94bc-e8a4-4e73-b8be-63364c29d753"
+       ;; :client-secret ""
+       :auth-url "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+       :token-url "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+       :redirect-uri "http://localhost"
+       :scope "https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/POP.AccessAsUser.All https://outlook.office.com/SMTP.Send offline_access"
+       :use-pkce "true" ))))
+
+(defvar auth-source-xoauth2-plugin-default-predefined-source "thunderbird"
+  "The default predefined issuers provider.")
+
+(defun auth-source-xoauth2-plugin--get-predefined-credentials (source provider)
+  "Helper function to get the predefined credentials of PROVIDER from SOURCE."
+  (plist-get (plist-get auth-source-xoauth2-plugin-predefined-issuers
+                        (intern source) 'string=)
+             (intern provider) 'string=))
 
 (defun auth-source-xoauth2-plugin--search-backends (orig-fun &rest args)
   "Perform `auth-source-search' and set password as access-token when requested.
@@ -48,48 +78,116 @@ if one sets `auth' to `xoauth2' in your auth-source-entry.  It is
 expected that `token_url', `client_id', `client_secret', and
 `refresh_token' are properly set along `host', `user', and
 `port' (note the snake_case)."
-  (auth-source-do-trivia "Advising auth-source-search")
+  (auth-source-do-trivia "[xoauth2-plugin] Advising auth-source-search")
   (let (check-secret)
     (when (memq :secret (nth 5 args))
       (auth-source-do-trivia
-       "Required fields include :secret.  As we are requesting access token to replace the secret, we'll temporary remove :secret from the require list and check that it's properly set to a valid access token later.")
+       (concat "[xoauth2-plugin] Required fields include :secret.  As we are "
+               "requesting access token to replace the secret, we'll "
+               "temporary remove :secret from the require list and check that "
+               "it's properly set to a valid access token later."))
       (setf (nth 5 args) (remove :secret (nth 5 args)))
       (setq check-secret t))
     (let ((orig-res (apply orig-fun args))
           res)
       (dolist (auth-data orig-res)
-        (auth-source-do-trivia "Matched auth data: %s" (pp-to-string auth-data))
-        (let ((auth (plist-get auth-data :auth)))
-          (when (equal auth "xoauth2")
+        (auth-source-do-trivia "[xoauth2-plugin] Matched auth data: %s"
+                               (pp-to-string auth-data))
+        (let ((auth (plist-get auth-data :auth))
+              (user (plist-get auth-data :user)))
+          (when (and (equal auth "xoauth2")
+                     ;; When sending mails, some auth-source query results from
+                     ;; some smtpmail authentication methods don't contain the
+                     ;; :user field (meanwhile queries from Gnus seems to always
+                     ;; include :user).  When using predefined provider
+                     ;; credentials, only the :user field is different to
+                     ;; distinguish among different accounts, which is
+                     ;; unfortunately missing in certain cases.  Fortunately,
+                     ;; smtpmail may set smtpmail-smtp-user to the user value
+                     ;; when X-Message-SMTP-Method is properly set.  Therefore
+                     ;; additionally, assuming X-Message-SMTP-Method is set
+                     ;; correctly, we need to check whether smtpmail-smtp-user
+                     ;; is the same as :user to be sure.
+                     (if smtpmail-smtp-user
+                         (progn
+                           (auth-source-do-trivia
+                            "[xoauth2-plugin] user: %s, smtpmail-smtp-user: %s"
+                            user smtpmail-smtp-user)
+                           (string= smtpmail-smtp-user user))
+                       t))
             (auth-source-do-debug
-             ":auth set to `xoauth2'.  Will get access token.")
-            (map-let (:auth-url
+             (concat "[xoauth2-plugin] account \"%s\" has :auth set to "
+                     "`xoauth2'.  Will get access token.")
+             user)
+            (map-let (:auth-source-xoauth2-predefined-service
+                      (:auth-source-xoauth2-predefined-source
+                       auth-source-xoauth2-predefined-source
+                       auth-source-xoauth2-plugin-default-predefined-source))
+                auth-data
+              (when auth-source-xoauth2-predefined-service
+                (auth-source-do-trivia
+                 (concat "[xoauth2-plugin] Using service \"%s\" with "
+                         "credentials provided by source \"%s\"")
+                 auth-source-xoauth2-predefined-service
+                 auth-source-xoauth2-predefined-source)
+                (setq auth-data
+                      (org-combine-plists
+                       auth-data
+                       (auth-source-xoauth2-plugin--get-predefined-credentials
+                        auth-source-xoauth2-predefined-source
+                        auth-source-xoauth2-predefined-service)))))
+            (map-let (:host
+                      :user
+                      :auth-url
                       :token-url
                       :scope
                       :client-id
                       :client-secret
                       :redirect-uri
-                      :state)
+                      :state
+                      :use-pkce)
                 auth-data
-              (auth-source-do-debug "Using oauth2 to auth and store token...")
+              (auth-source-do-debug
+               "[xoauth2-plugin] Using oauth2 to auth and store token...")
               (let ((token (oauth2-auth-and-store
                             auth-url token-url scope client-id client-secret
-                            redirect-uri state)))
-                (auth-source-do-trivia "oauth2 token: %s" (pp-to-string token))
-                (auth-source-do-debug "Refreshing token...")
-                (oauth2-refresh-access token)
-                (auth-source-do-debug "Refresh successful.")
-                (auth-source-do-trivia "oauth2 token after refresh: %s"
+                            redirect-uri state user host use-pkce)))
+                (auth-source-do-trivia "[xoauth2-plugin] oauth2 token: %s"
                                        (pp-to-string token))
+                (auth-source-do-debug "[xoauth2-plugin] Refreshing token...")
+                (oauth2-refresh-access token host)
+                (auth-source-do-debug "[xoauth2-plugin] Refresh successful.")
+                (auth-source-do-trivia
+                 "[xoauth2-plugin] OAuth2 token after refresh: %s"
+                 (pp-to-string token))
                 (let ((access-token (oauth2-token-access-token token)))
                   (auth-source-do-trivia
                    "Updating :secret with access-token: %s" access-token)
                   (setq auth-data
-                        (plist-put auth-data :secret access-token)))))))
+                        (plist-put auth-data :secret access-token))
+                  ;; Fill fields that may help 3rd party usage,
+                  ;; e.g. offlineimap.
+                  (setq auth-data
+                        (plist-put auth-data :auth-url auth-url))
+                  (setq auth-data
+                        (plist-put auth-data :token-url token-url))
+                  (setq auth-data
+                        (plist-put auth-data :client-id client-id))
+                  (setq auth-data
+                        (plist-put auth-data :client-secret client-secret))
+                  (setq auth-data
+                        (plist-put auth-data :access-token
+                                   (oauth2-token-access-token token)))
+                  (setq auth-data
+                        (plist-put auth-data :refresh-token
+                                   (oauth2-token-refresh-token token))))))))
 
+        (auth-source-do-debug "[xoauth2-plugin] auth-data after processing: %s"
+                              (pp-to-string auth-data))
         (unless (and check-secret
                      (not (plist-get auth-data :secret)))
-          (auth-source-do-debug "Updating auth-source-search results.")
+          (auth-source-do-debug
+           "[xoauth2-plugin] Updating auth-source-search results.")
           (push auth-data res)))
       res)))
 
