@@ -4,7 +4,7 @@
 
 ;; Author: Xiyue Deng <manphiz@gmail.com>
 ;; Homepage: https://gitlab.com/manphiz/auth-source-xoauth2-plugin
-;; Version: 0.3
+;; Version: 0.3.1
 ;; Package-Requires: ((emacs "28.1") (oauth2 "0.18"))
 
 ;; This file is not part of GNU Emacs.
@@ -67,8 +67,8 @@
 (defun auth-source-xoauth2-plugin--get-predefined-credentials (source provider)
   "Helper function to get the predefined credentials of PROVIDER from SOURCE."
   (plist-get (plist-get auth-source-xoauth2-plugin-predefined-issuers
-                        (intern source) 'string=)
-             (intern provider) 'string=))
+                        (intern source))
+             (intern provider)))
 
 (defun auth-source-xoauth2-plugin--search-backends (orig-fun &rest args)
   "Perform `auth-source-search' and set password as access-token when requested.
@@ -225,6 +225,7 @@ expected that `token_url', `client_id', `client_secret', and
 Enable auth-source-xoauth2-plugin-mode to use xoauth2
 authentications for emails."
   :global t
+  :group 'auth-source
   (if auth-source-xoauth2-plugin-mode
       (auth-source-xoauth2-plugin--enable)
     (auth-source-xoauth2-plugin--disable)))
