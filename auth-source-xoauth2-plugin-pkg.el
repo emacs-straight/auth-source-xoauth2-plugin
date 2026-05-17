@@ -1,2 +1,2 @@
-;; Generated package description from auth-source-xoauth2-plugin.el  -*- mode: lisp-data; no-byte-compile: t -*-
-(define-package "auth-source-xoauth2-plugin" "0.3.2.0.20251113.213445" "Authentication source plugin for xoauth2" '((emacs "28.1") (oauth2 "0.18")) :commit "c99b5cbe0a015890eed3764c58ea06daaa712b09" :authors '(("Xiyue Deng" . "manphiz@gmail.com")) :maintainer '("Xiyue Deng" . "manphiz@gmail.com") :url "https://gitlab.com/manphiz/auth-source-xoauth2-plugin")
+;; Generated package description from auth-source-xoauth2-plugin.el  -*- mode: lisp-data; no-byte-compile: t; lexical-binding:t -*-
+(define-package "auth-source-xoauth2-plugin" "0.4.0.20260515.203435" "Authentication source plugin for xoauth2" '((emacs "28.1") (oauth2 "0.18")) :commit "913134419ed0a8d66f33407908919730c89def69" :authors '(("Xiyue Deng" . "manphiz@gmail.com")) :maintainer '("Xiyue Deng" . "manphiz@gmail.com") :url "https://gitlab.com/manphiz/auth-source-xoauth2-plugin")

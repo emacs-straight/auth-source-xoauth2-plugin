@@ -1,0 +1,51 @@
+Summary of changes to auth-source-xoauth2-plugin
+――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+
+
+1 0.4
+═════
+
+1.1 Add error handling
+──────────────────────
+
+  Newer oauth2.el versions may return errors when fetching token fails.
+
+
+1.2 Add a document for use by external programs
+───────────────────────────────────────────────
+
+  Provides an example Elisp script for querying the credentials which
+  external programs can use, and added an example for offlineimap.
+
+
+2 0.3
+═════
+
+2.1 Add support for predefined credentials
+──────────────────────────────────────────
+
+  This greatly simplifies the set-up in auth-source (details in
+  README.org).
+
+
+3 0.2.1
+═══════
+
+3.1 Quick fix for the wrong usage of add-to-list
+────────────────────────────────────────────────
+
+
+4 0.2
+═════
+
+4.1 Workaround smtpmail limitations when handling xoauth2
+─────────────────────────────────────────────────────────
+
+
+5 0.1
+═════
+
+5.1 Initial release
+───────────────────
+
+  Thanks Philip Kaludercic for the detailed comments and suggestions!
