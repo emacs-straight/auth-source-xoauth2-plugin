@@ -1,10 +1,10 @@
 ;;; auth-source-xoauth2-plugin.el --- Authentication source plugin for xoauth2 -*- lexical-binding: t -*-
 
-;; Copyright (C) 2024-2025  Free Software Foundation, Inc.
+;; Copyright (C) 2024-2026  Free Software Foundation, Inc.
 
 ;; Author: Xiyue Deng <manphiz@gmail.com>
 ;; Homepage: https://gitlab.com/manphiz/auth-source-xoauth2-plugin
-;; Version: 0.4.1
+;; Version: 0.5
 ;; Package-Requires: ((emacs "28.1") (oauth2 "0.18"))
 
 ;; This file is not part of GNU Emacs.
@@ -254,9 +254,11 @@ stuck more often when enabling xoauth2."
     ;; successful, but for Gmail when an xoauth2 request fails it returns 334
     ;; server challenge, and waiting for a subsequent request with the correct
     ;; credentials which will never happen.  Putting 'xoauth2 as the last entry
-    ;; in smtpmail-auth-supported so that it is tried last.  See also
-    ;; https://debbugs.gnu.org/78366.
-    (add-to-list 'smtpmail-auth-supported 'xoauth2 t)
+    ;; in smtpmail-auth-supported for Emacs <31.0.90 so that it is tried last.
+    ;; This has been fixed since 31.1.  See also https://debbugs.gnu.org/78366.
+    (let ((is-emacs-31-or-higher (version<= "31.0.90" emacs-version)))
+      (add-to-list 'smtpmail-auth-supported 'xoauth2
+                   (not is-emacs-31-or-higher)))
     (setq auth-source-xoauth2-plugin--xoauth2-enabled-by-us t))
 
   (advice-add #'auth-source-search-backends :around
